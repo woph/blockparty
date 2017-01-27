@@ -4,24 +4,15 @@ var blockApp = angular.module('BlockApp', [], function() {});
 
 blockApp.controller('BlockController', function($scope, $http, Base64, $interval, $filter, $timeout) {
 
-  $scope.lastProcessedBlocktime = 0;
-
-  $scope.vin = {
-    list: [
-      'WP023948782357890',
-      'WP023948782357891',
-      'WP023948782357892',
-      'WP023948782357893',
-      'WP023948782357894',
-      'WP023948782357895',
-      'WP023948782357896',
-      'WP023948782357897'
-    ],
-    grabOne: function() {
-      return this.list[_.random(0,this.list.length-1)];
-    }
+  $scope.stream = {
+    list: [],
+    selected: null,
+    select: function(stream) {
+      $scope.stream.selected = stream;
+      getStreamItems();
+    },
+    items: []
   };
-
 
   String.prototype.hexEncode = function(){
     var hex, i;
@@ -33,73 +24,31 @@ blockApp.controller('BlockController', function($scope, $http, Base64, $interval
     return result;
   };
 
-  function getTransactions() {
-    $scope.transactions = [];
-    var assets = ['eon_kwh','ENBW_kwh'];
-    _.each(assets, function(assetname) {
-      $http.post($scope.url, {
-        method: 'listassettransactions',
-        params: [assetname]
-      }).then(function(success) {
-        //alert(JSON.stringify(success));
-        _.each(success.data.result, function(transaction) {
-          if(_.contains(_.keys(transaction.addresses), $scope.address)) {
-            if(transaction.blocktime > $scope.lastProcessedBlocktime) {
-              transaction.pushedToStream = false;
-            } else {
-              transaction.pushedToStream = true;
-            }
-            $scope.transactions.push(transaction);
-          }
-        });
-        // sort by blocktime:
-        $scope.transactions = $filter('orderBy')($scope.transactions, 'blocktime', false);
-        // wait 4 seconds for user feedbacK
-        // now we have all transactions where this wallet is affected AND which is new
-        _.each($scope.transactions, function(transaction) {
-          var randomVin = $scope.vin.grabOne();
-          // get details from a transaction with the getrawtransaction method
-          $http.post($scope.url, {
-            method: 'getrawtransaction',
-            params: [transaction.txid, 1]
-          }).then(function(rawtransaction) {
-            rawtransaction = rawtransaction.data.result;
-            var tx = _.find(rawtransaction.vout, function(transaction) {
-              return transaction.scriptPubKey.addresses[0] === $scope.address;
-            });
-            if(tx != null && tx != undefined) {
-              var asset = tx.assets[0];
-              transaction.entity = asset.name;
-              if(transaction.pushedToStream === false) {
-                $timeout(function() {
-                  var streamItem = {
-                    vin: randomVin,
-                    provider: asset.name.indexOf('_') === -1 ? asset.name.toLowerCase() : asset.name.substr(0, asset.name.indexOf('_')).toLowerCase(),
-                    chargeUnit: asset.name,
-                    chargeAmount: asset.raw,
-                    price: 0.19
-                  };
-                  var payload = JSON.stringify(streamItem).hexEncode();
-                  // publish an item to the stream:
-                  $http.post($scope.url, {
-                    method: 'publish',
-                    params: ['ladeVorgaenge', randomVin, payload]
-                  }).then(function(success) {
-                    transaction.pushedToStream = true;
-                    if($scope.lastProcessedBlocktime < transaction.blocktime) $scope.lastProcessedBlocktime = transaction.blocktime;
-                  }, function(error) {
-                    console.log(error);
-                  });
-                }, 1000);
-              }
-            }
-          }, function(error) {
-            console.log(error);
-          });
-        });
-      },function(error) {
-        console.log(error);
+  String.prototype.hexDecode = function(){
+    var j;
+    var hexes = this.match(/.{1,2}/g) || [];
+    var back = "";
+    for(j = 0; j<hexes.length; j++) {
+        back += String.fromCharCode(parseInt(hexes[j], 16));
+    }
+    return back;
+  };
+
+  function getStreamItems() {
+    $scope.stream.items = [];
+    $http.post($scope.url, {
+      method: 'liststreamkeyitems',
+      params: ['ladeVorgaenge', $scope.stream.selected]
+    }).then(function(success) {
+      console.log(success);
+      _.each(success.data.result, function(streamitem) {
+        console.log(streamitem);
+        // process stream items
+        var item = streamitem.data.hexDecode();
+        $scope.stream.items.push(JSON.parse(item));
       });
+    },function(error) {
+      console.log(error);
     });
   };
 
@@ -127,14 +76,12 @@ blockApp.controller('BlockController', function($scope, $http, Base64, $interval
 
         // first of all, grab the wallet address:
         $http.post($scope.url, {
-          method: 'getaddresses',
-          params: []
+          method: 'liststreamkeys',
+          params: ['ladeVorgaenge']
         }).then(function(success) {
-          if(success.data.result.length > 0) $scope.address = success.data.result[0];
-          getTransactions();
-          $interval(function() {
-            getTransactions();
-          }, 15000);
+          _.each(success.data.result, function(item) {
+            $scope.stream.list.push(item.key);
+          });
         },function(error) {
           console.log(error);
         });

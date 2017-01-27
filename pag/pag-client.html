@@ -26,17 +26,18 @@
 			</form>
 
 			<div ng-show="credentials.valid">
-				<h2>Your latest asset transactions:</h2>
-				<small>Latest blocktime: {{ lastProcessedBlocktime }}</small>
+				<label>Select a VIN to display its history</label>
 				<ul>
-					<li ng-repeat="transaction in transactions | orderBy: 'blocktime' : true">
-						{{ transaction.addresses[address] + ' ' + transaction.entity }}
-						<span ng-show="transaction.pushedToStream" style="color: green;">
-							published
-						</span>
-						<span ng-hide="transaction.pushedToStream" style="color: orange;">
-							publishing
-						</span>
+					<li ng-repeat="vin in stream.list" ng-click="stream.select(vin)">
+						{{ vin }}
+						<span style="color: red;" ng-show="vin == stream.selected"> x</span>
+					</li>
+				</ul>
+
+				<h2 ng-show="stream.selected != null">VIN history for {{ stream.selected }}:</h2>
+				<ul>
+					<li ng-repeat="item in stream.items">
+						Charged {{ item.chargeAmount + ' ' + item.chargeUnit}} for {{ item.price }}/unit at {{ item.provider.toUpperCase() }}
 					</li>
 				</ul>
 
