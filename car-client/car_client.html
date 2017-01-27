@@ -3,43 +3,134 @@
 	<head>
 		<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/angularjs/1.6.1/angular.min.js"></script>
 		<script type="text/javascript" src="http://underscorejs.org/underscore-min.js"></script>
+		<link rel="stylesheet" href="block.css" />
 	</head>
 	<body>
 
 
 		<div class="block_main" ng-controller="BlockController">
 
-			<form ng-hide="credentials.valid">
-				<label for="block_address">RPC IP Address</label>
-				<input type="text" id="block_address" ng-model="credentials.address" />
+			<div id="block_header">
+				<img src="pag.png"/>
+			</div>
 
-				<label for="block_oort">RPC Port</label>
-				<input type="text" id="block_oort" ng-model="credentials.port" />
-
-				<label for="block_user">RPC Username</label>
-				<input type="text" id="block_user" ng-model="credentials.username" />
-
-				<label for="block_password">RPC Password</label>
-				<input type="text" id="block_password" ng-model="credentials.password" />
-
-				<button ng-click="credentials.connect()">Connect</button>
-			</form>
+			<div id="block_login" ng-hide="credentials.valid">
+				<form>
+					<table style="margin: 5%; width: 90%; border: 1px solid grey; padding: 15px; border-radius: 10px;">
+						<tr>
+							<td style="width: 20%;">
+								<label for="block_address" class="block_clickable">RPC IP Address</label>
+							</td>
+							<td style="width: 30%;">
+								<input type="text" id="block_address" ng-model="credentials.address" />
+							</td>
+							<td style="width: 20%;">
+								<label for="block_oort" class="block_clickable">RPC Port</label>
+							</td>
+							<td style="width: 30%;">
+								<input type="text" id="block_oort" ng-model="credentials.port" />
+							</td>
+						</tr>
+						<tr>
+							<td style="width: 20%;">
+								<label for="block_user" class="block_clickable">RPC Username</label>
+							</td>
+							<td style="width: 30%;">
+								<input type="text" id="block_user" ng-model="credentials.username" />
+							</td>
+							<td style="width: 20%;">
+								<label for="block_password" class="block_clickable">RPC Password</label>
+							</td>
+							<td style="width: 30%;">
+								<input type="text" id="block_password" ng-model="credentials.password" />
+							</td>
+						</tr>
+						<tr>
+							<td colspan="4" style="text-align: center;">
+								<input type="button" ng-click="credentials.connect()" class="block_clickable" style="width: 60%; margin-top: 30px; border-radius: 4px;" value="Connect"/>
+							</td>
+						</tr>
+					</table>
+				</form>
+			</div>
 
 			<div ng-show="credentials.valid">
-				<h2>Your latest asset transactions:</h2>
-				<small>Latest blocktime: {{ lastProcessedBlocktime }}</small>
-				<ul>
-					<li ng-repeat="transaction in transactions | orderBy: 'blocktime' : true">
-						{{ transaction.addresses[address] + ' ' + transaction.entity }}
-						<span ng-show="transaction.pushedToStream" style="color: green;">
-							published
-						</span>
-						<span ng-hide="transaction.pushedToStream" style="color: orange;">
-							publishing
-						</span>
-					</li>
-				</ul>
-
+				<div id="block_selection-pane">
+					<h3>Description</h3>
+					<p>This great overview page shows received charge events and automatically publishes them to the stream.</p>
+					<label>Chain information</label>
+					<table id="block_details-table">
+						<tr>
+							<td>
+								Latest publishing
+							</td>
+							<td>
+								{{ lastProcessedBlocktime }}
+							</td>
+						</tr>
+						<tr>
+							<td>
+								Chain name
+							</td>
+							<td>
+								{{ api.info.data.result.chainname }}
+							</td>
+						</tr>
+						<tr>
+							<td>
+								Block count
+							</td>
+							<td>
+								{{ api.info.data.result.blocks }}
+							</td>
+						</tr>
+						<tr>
+							<td>
+								Connections
+							</td>
+							<td>
+								{{ api.info.data.result.connections }}
+							</td>
+						</tr>
+					</table>
+				</div>
+				<div id="block_details-pane">
+					<h2>Your latest asset transactions</h2>
+					<small>live reload: enabled</small>
+					<table id="block_details-table">
+						<thead>
+							<tr>
+								<th>
+									Amount
+								</th>
+								<th>
+									Unit
+								</th>
+								<th>
+									State
+								</th>
+							</tr>
+						</thead>
+						<tbody>
+							<tr ng-repeat="transaction in transactions | orderBy: 'blocktime' : true">
+								<td>
+									{{ transaction.addresses[address] }}
+								</td>
+								<td>
+									{{ transaction.entity }}
+								</td>
+								<td>
+									<span ng-show="transaction.pushedToStream" style="color: green;">
+										published
+									</span>
+									<span ng-hide="transaction.pushedToStream" style="color: orange;">
+										publishing
+									</span>
+								</td>
+							</tr>
+						</tbody>
+					</table>
+				</div>
 			</div>
 
 		</div>

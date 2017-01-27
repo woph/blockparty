@@ -86,9 +86,19 @@ blockApp.controller('BlockController', function($scope, $http, Base64, $interval
                     params: ['ladeVorgaenge', randomVin, payload]
                   }).then(function(success) {
                     transaction.pushedToStream = true;
-                    if($scope.lastProcessedBlocktime < transaction.blocktime) $scope.lastProcessedBlocktime = transaction.blocktime;
+                    if($scope.lastProcessedBlocktime < transaction.blocktime) {
+                      var d = new Date(0);
+                      d.setUTCSeconds(transaction.blocktime);
+                      var day = d.getDate();
+                      var monthIndex = d.getMonth();
+                      var year = d.getFullYear();
+                      var hh = d.getUTCHours();
+                      var mm = d.getUTCMinutes();
+                      var ss = d.getSeconds();
+                      $scope.lastProcessedBlocktime = day + '.' + (monthIndex+1) + '.' + year + ' ' + hh + ':' + mm + ':' + ss;
+                      $scope.lastProcessedBlocktime = transaction.blocktime;
+                    }
                   }, function(error) {
-                    console.log(error);
                   });
                 }, 1000);
               }
@@ -134,6 +144,15 @@ blockApp.controller('BlockController', function($scope, $http, Base64, $interval
           getTransactions();
           $interval(function() {
             getTransactions();
+            var http = $http.post($scope.url, {
+              method: 'getinfo',
+              params: []
+            });
+            http.then(function(successResponse) {
+              $scope.api.info = successResponse;
+            }, function(error) {
+              console.log(error);
+            });
           }, 15000);
         },function(error) {
           console.log(error);

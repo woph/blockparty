@@ -38,15 +38,17 @@ blockApp.controller('BlockController', function($scope, $http, Base64, $interval
     $scope.stream.items = [];
     $http.post($scope.url, {
       method: 'liststreamkeyitems',
-      params: ['ladeVorgaenge', $scope.stream.selected]
+      params: ['ladeVorgaenge', $scope.stream.selected, false, 500]
     }).then(function(success) {
-      console.log(success);
+      var total = 0;
       _.each(success.data.result, function(streamitem) {
-        console.log(streamitem);
         // process stream items
         var item = streamitem.data.hexDecode();
-        $scope.stream.items.push(JSON.parse(item));
+        item = JSON.parse(item);
+        $scope.stream.items.push(item);
+        total += item.chargeAmount;
       });
+      $scope.totalSum = total;
     },function(error) {
       console.log(error);
     });
@@ -80,7 +82,7 @@ blockApp.controller('BlockController', function($scope, $http, Base64, $interval
           params: ['ladeVorgaenge']
         }).then(function(success) {
           _.each(success.data.result, function(item) {
-            $scope.stream.list.push(item.key);
+            $scope.stream.list.push(item);
           });
         },function(error) {
           console.log(error);
