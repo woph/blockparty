@@ -1,8 +1,8 @@
-default.name=Charging Chain                   # name to display in the web interface
+default.name=Default                   # name to display in the web interface
 default.rpchost=127.0.0.1              # IP address of MultiChain node
-default.rpcport=4326                  # see rpc-port from chain parameters
+default.rpcport=12345                  # see rpc-port from chain parameters
 default.rpcuser=multichainrpc          # username for RPC from multichain.conf
-default.rpcpassword=EQx6hhzzTkuuV1orAd5GhwZBc77jTJcuqqbbCg8uBTat                   # password for RPC from multichain.conf
+default.rpcpassword=                   # password for RPC from multichain.conf
 
 # You can configure support for other nodes using a word other than 'default':
 #

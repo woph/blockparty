@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="de" ng-app="BlockApp">
+	<head>
+		<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/angularjs/1.6.1/angular.min.js"></script>
+		<script type="text/javascript" src="http://underscorejs.org/underscore-min.js"></script>
+	</head>
+	<body>
+
+
+		<div class="block_main" ng-controller="BlockController">
+
+			<form ng-hide="credentials.valid">
+				<label for="block_address">RPC IP Address</label>
+				<input type="text" id="block_address" ng-model="credentials.address" />
+
+				<label for="block_oort">RPC Port</label>
+				<input type="text" id="block_oort" ng-model="credentials.port" />
+
+				<label for="block_user">RPC Username</label>
+				<input type="text" id="block_user" ng-model="credentials.username" />
+
+				<label for="block_password">RPC Password</label>
+				<input type="text" id="block_password" ng-model="credentials.password" />
+
+				<button ng-click="credentials.connect()">Connect</button>
+			</form>
+
+			<div ng-show="credentials.valid">
+				<h2>Your latest asset transactions:</h2>
+				<small>Latest blocktime: {{ lastProcessedBlocktime }}</small>
+				<ul>
+					<li ng-repeat="transaction in transactions | orderBy: 'blocktime' : true">
+						{{ transaction.addresses[address] }} eon_kwh
+						<span ng-show="transaction.pushedToStream" style="color: green;">
+							published
+						</span>
+						<span ng-hide="transaction.pushedToStream" style="color: orange;">
+							publishing
+						</span>
+					</li>
+				</ul>
+
+			</div>
+
+		</div>
+
+		<script type="text/javascript" src="block.js"></script>
+	</body>
+</html>
